@@ -1,0 +1,8 @@
+
+
+# copile Cuda
+# On linux
+nvcc -O3 -o bin/backend/cuda/CudaFractalBackend sources/backend/cuda/CudaFractalBackend.cu
+
+# On windows
+nvcc -O3 -o bin\backend\cuda\CudaFractalBackend.exe sources\backend\cuda\CudaFractalBackend.cu
