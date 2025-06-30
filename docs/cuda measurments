@@ -1,0 +1,14 @@
+Eingabe
+Zoom x y    pixelX  pixelY
+1.0 0.0 0.0 10000 10000         Rendertime 193ms
+100.0 0.5 0.5 500 500           Rendertime 0.2ms
+100.0 0.5 0.5 10000 10000       Rendertime 84ms
+100.0 0.5 0.5 10000 10000       Rendertime 84ms
+100.0 0.5 0.5 20000 20000       Rendertime 312ms
+
+6.884310827443782E9 -1.484610808411835 -4.721191790807227E-10 10000 10000 Rendertime    533ms
+   1000 1000                                                                            10ms
+   20000 20000                                                                          3305ms
+
+
+100000x100000 crash

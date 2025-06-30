@@ -3,6 +3,14 @@
 #include <stdlib.h>
 #include <cuda_runtime.h>
 
+/**
+ * @brief  Berechnet die Anzahl der Iterationen für einen Punkt im Mandelbrot
+ * 
+ * @param real 
+ * @param imag 
+ * @param max_iter 
+ * @return anzahl der Iterationen
+ */
 __device__ int mandelbrot(double real, double imag, int max_iter)
 {
     double z_real = 0.0, z_imag = 0.0;
@@ -16,6 +24,16 @@ __device__ int mandelbrot(double real, double imag, int max_iter)
     }
     return iter;
 }
+
+/**
+ * @brief Konvertiert einen Farbwert in RGB. Schreibt die RGB-Werte in die übergebenen Referenzen.
+ * 
+ * @param color 
+ * @param r 
+ * @param g 
+ * @param b 
+ * @return void
+ */
 __device__ void valueToRGB(int color, uint8_t &r, uint8_t &g, uint8_t &b)
 {
 
@@ -70,6 +88,18 @@ __device__ void valueToRGB(int color, uint8_t &r, uint8_t &g, uint8_t &b)
     }
 }
 
+/**
+ * @brief Render-Funktion für das Mandelbrot. Diese Funktion wird auf der GPU ausgeführt daher __global__.
+ * Die Funktion berechnet die Mandelbrot-Menge für jeden Pixel im Bild und speichert die RGB-Werte in das Bild-Array.
+ * 
+ * @param image 
+ * @param scale 
+ * @param centerX 
+ * @param centerY 
+ * @param WIDTH 
+ * @param HEIGHT 
+ * @return void
+ */
 __global__ void render(uint8_t *image, double scale, double centerX, double centerY, int WIDTH, int HEIGHT)
 {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -78,9 +108,9 @@ __global__ void render(uint8_t *image, double scale, double centerX, double cent
         return;
 
     double real = (x - WIDTH / 2.0) * scale + centerX;
-    double imag = (HEIGHT / 2.0 - y) * scale + centerY; // Korrigierte Y-Achse
+    double imag = (HEIGHT / 2.0 - y) * scale + centerY;
 
-    const double INITIAL_SCALE_AT_ZOOM_1 = 4.0 / WIDTH; // Dies ist ein konstanter Wert, der den Skalierungsfaktor bei Zoom 1 repräsentiert.
+    const double INITIAL_SCALE_AT_ZOOM_1 = 4.0 / WIDTH;
 
     int MAX_ITER = 256;
     if (scale > 0)
@@ -108,9 +138,10 @@ __global__ void render(uint8_t *image, double scale, double centerX, double cent
     uint8_t r, g, b;
     valueToRGB(color, r, g, b);
 
-    image[idx + 0] = r; // R
-    image[idx + 1] = g; // G
-    image[idx + 2] = b; // B
+    image[idx + 0] = r;
+    image[idx + 1] = g;
+    image[idx + 2] = b;
+
 }
 
 int main()
@@ -120,21 +151,18 @@ int main()
 
     char line[256];
     
-    // CUDA Events außerhalb der Schleife initialisieren, um wiederholte Erzeugung zu vermeiden
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
 
-    // Initialisierung von d_image und h_image auf NULL
-    // Dies hilft, potenzielle doppelte Freigaben zu vermeiden, wenn die Schleife vorzeitig beendet wird
     uint8_t *d_image = NULL;
     uint8_t *h_image = NULL;
-    size_t currentImageSize = 0; // Speichert die aktuelle Größe des zugewiesenen Speichers
+    size_t currentImageSize = 0;
 
     while (fgets(line, sizeof(line), stdin))
     {
-        int WIDTH;  // Breite des Bildes
-        int HEIGHT; // Höhe des Bildes
+        int WIDTH;
+        int HEIGHT;
         double zoom, centerX, centerY;
         
         if (sscanf(line, "%lf %lf %lf %d %d", &zoom, &centerX, &centerY, &WIDTH, &HEIGHT) != 5)
@@ -189,6 +217,7 @@ int main()
         
         cudaMemset(d_image, 0, newImageSize); 
 
+        //Aufruf der Regderfunktion auf der GPU
         render<<<grid, block>>>(d_image, scale, centerX, centerY, WIDTH, HEIGHT);
 
         cudaDeviceSynchronize();
@@ -208,8 +237,6 @@ int main()
         fprintf(stderr, "Frame render time: %.3f ms\n", milliseconds);
         fflush(stderr);
     }
-
-    // Ressourcen freigeben, wenn die Schleife beendet ist
     if (d_image) {
         cudaFree(d_image);
     }
